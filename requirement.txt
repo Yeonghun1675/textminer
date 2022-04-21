@@ -1,0 +1,15 @@
+**requirement
+
+- regex (re와 다릅니다. 주의 부탁드립니다.)
+- json
+- pandas
+- numpy
+- chemdataextractor
+- bs4
+- itertools
+- functools
+- collections
+- fuzzywuzzy
+- pickle
+
+
