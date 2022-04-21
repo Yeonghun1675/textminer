@@ -1081,11 +1081,9 @@ def matching_algorithm(sent, database, chemical_type_dict, before_represent_chem
     return revised_sent, unit_dictionary, next_represent_chem
 
 
-# In[49]:
-
-
 def extract_paragraph(file_name, url_text = None, show_property = False, database = None, extract_all_property=False, 
-                      return_documenTM = False, cut_off = True, unit_dict = None, special_unit_dictionary = None, parser=None):
+                      return_documenTM = False, cut_off = True, unit_dict = None, special_unit_dictionary = None, 
+                      parser=None):
     
     """Extract data from text (paragraph)
     ---------------------------------
@@ -1160,8 +1158,9 @@ def extract_paragraph(file_name, url_text = None, show_property = False, databas
                 
             for T in chain.from_iterable(iters):
                 #for T in t:
-                dictionary_chemical = {'Material':T.target, 'Value':T.value, 'Unit':T.unit, 'Condition':T.condition, 'Property':T.prop,
-                                      'Reference':str(file_name), 'Distance':T.distance}
+                dictionary_chemical = {'Material':str(T.target), 'Value':str(T.value), 'Unit':str(T.unit), 
+                                       'Condition':str(T.condition), 'Property':str(T.prop),
+                                      'Reference':str(file_name), 'Distance':str(T.distance)}
                 
                 json_list.append(dictionary_chemical)
 
@@ -1177,102 +1176,6 @@ def extract_paragraph(file_name, url_text = None, show_property = False, databas
     return json_list
 
 
-def extract_paragraph_test(file_name, url_text = None, show_property = False, database = None, extract_all_property=False, 
-                      return_documenTM = False, cut_off = True, unit_dict = None):
-    
-    """Extract data from text (paragraph)
-    ---------------------------------
-    filename : (str) Name of file
-    url_text : (str) Url of data (reference) (default : None, which is same as file_name)
-    show_property : (bool) If True, print data (default : False)
-    extract_all_property : (bool) If True, extract all of property. If false, extract only 'chracterization' and 'reaction' data
-    database : (dict) Dictionary for chemhash, chemname, ion1, ion2, unit_database, sm1, sm2 (default : None)
-    return_documentTM : (bool) If True, return (json_list, Document_TM). Else, return (json_list) only
-    unit_dict : (dict) Property-keyword dict
-    ---------------------------------
-    output : json_list
-    
-    """
-    if not url_text:
-        url_text = file_name
-    
-    if not database: 
-        database = {}
-        
-    if not isinstance(unit_dict, dict):
-        unit_dict = unit_dict_default
-        
-    keyword_dict = make_keyword_dict(unit_dict)
-    
-    Q = DocumentTM(file_name, **database)
-    Q.doc(parser = 'cde_parser')
-    Q.find_strange()
-    chemical_type_dict = {}
-    database = Q.database()
-    
-    data_collection = []
-    json_list = []
-    
-    for Para in Q.Para:
-        new_split, unit = Q.tokenize_test(Para, lemma = False, Strange = True, cut_off=cut_off)
-        
-        if not new_split:
-            continue
-            
-        #print (new_split)
-        
-        before_represent_chem = False
-        
-        for sent in cut_paragraph(new_split):
-            new_sent, unit_dictionary, next_represent_chem = matching_algorithm(sent, database, chemical_type_dict, before_represent_chem)
-
-            if extract_all_property:
-                #iters = chain.from_iterable(unit_dictionary.values())
-                iters = chain.from_iterable([dics.values() for dics in unit_dictionary.values()])
-            else:
-                iters = unit_dictionary['Character'].values()
-                
-            if show_property and (unit_dictionary['Character'] or unit_dictionary['Reaction']):
-                
-                print ("\n\n------------------------------------")
-                print (file_name)
-                print (" ".join([str(t) for t in new_sent]))
-                print ("\n")
-                print ("------------------------------------")
-                
-            for T in chain.from_iterable(iters):
-                #for T in t:
-                dictionary_chemical = {'Material':T.target, 'Value':T.value, 'Unit':T.unit, 'Condition':T.condition, 'Property':T.prop,
-                                      'Reference':str(file_name)}
-                
-                json_list.append(dictionary_chemical)
-
-                if show_property:
-                    print ("value:", T, "condition:", T.condition, "chemical:", T.target)
-                    
-            if isinstance(next_represent_chem, Chemical) or not next_represent_chem:
-                before_represent_chem = next_represent_chem       
-            
-    if return_documenTM:
-        return json_list, Q
-    
-    return json_list
-
-#mining_all('Catalyst_paper/wiley_2131.html')
-
-
-# In[51]:
-
-
-if __name__ == '__main__':
-    #file_name='Battery_paper/test_1093.html'
-    file_name='./OLED/test_pdf/2.html'
-    z, Q = extract_paragraph_test(file_name, unit_dict = None, show_property = True, extract_all_property=True, return_documenTM=True, cut_off = False)
-    print ("\n\n")
-    #q, db = data_with_sentence(file_name)
-
-
-# In[52]:
 
 
 def data_with_sentence(file_name, database = None, show = False, extract_all_property=False):
@@ -1330,99 +1233,6 @@ def data_with_sentence(file_name, database = None, show = False, extract_all_pro
             
     return data_list, database
 
-#mining_all('Catalyst_paper/wiley_2131.html')
-
-
-# In[57]:
-
-
-def test_paragraph(Para, extract_all_property=True, print_dictionary = True):
-    Q = DocumentTM('test.html')
-    
-    Q.find_strange(text = Para, cut_off=0)
-    #print (Q._strange)
-    
-    new_splits, unit = Q.tokenize_paragraph(Para, lemma=False, cut_off=False, Strange = True)
-    
-    if print_dictionary:
-        #print (new_splits)
-        pass
-    
-    
-    
-    
-    output = []
-    database = Q.database()
-    before_represent_chem = False
-    #print (new_splits)
-    for new_split in cut_paragraph(new_splits):
-        #print (new_split)
-        new_sent, unit_dictionary, next_represent_chem = matching_algorithm(new_split, database, None, before_represent_chem)
-        #print (new_sent)
-        
-        iters = chain.from_iterable([dics.values() for dics in unit_dictionary.values()])
-
-        if extract_all_property:
-            #iters = chain.from_iterable(unit_dictionary.values())
-            iters = chain.from_iterable([dics.values() for dics in unit_dictionary.values()])
-        else:
-            iters = unit_dictionary['Character'].values()
-
-        for T in chain.from_iterable(iters):
-            if print_dictionary:
-                print ("value:", T, "condition:", T.condition, "chemical:", T.target)
-            
-            output.append(T)
-            
-        if isinstance(next_represent_chem, Chemical) or not next_represent_chem:
-            before_represent_chem = next_represent_chem
-            
-    return output
-
-
-# In[58]:
-
-
-if __name__ == '__main__':
-    #para = "The surface area of 240 m2/g is PCN"
-    #para = 'PL ( PL ) measurements showed that -strange(TPA-PIM)- displayed similar PL spectral character with λmax at -num(424)- -u000000-  to that of TPA-PPI with λmax at  -num(438)- -u000000-'
-    para = 'it is Hg ( 1.0g and  350 mol), Al (30.0g and 250 mol)'
-    test_paragraph(para, True)
-    #matching_algorithm(para.split(), {}, {})
-
-
-# In[ ]:
-
-
-if __name__ == '__main__':
-    direc = Path("./Battery_paper//")
-    files = direc.glob("*.html")
-    for i, file in enumerate(files):
-        if i>100:
-            break
-        extract_paragraph(file, show_property=True, extract_all_property=False)
-        
-
-
-# In[21]:
-
-
-def check_from_specific_unit(data_list, unit, show = True):
-    total_list = []
-    #data_list = extract_paragraph(file_name, show_character=False, extract_all_property=True)
-    for data in data_list:
-        #print (data['Unit'])
-        if data['Unit'] == unit:
-            total_list.append(data)
-            if show:
-                print (data)
-            
-    return total_list
-        
-
-
-# In[22]:
-
 
 from collections import Counter
 def property_list_of_specific_unit(data_list, unit, counter= None, show = False):
@@ -1469,22 +1279,3 @@ if __name__ == '__main__':
         #print (counter_list)
         #extract_paragraph(file, show_character=True, extract_all_property=False)x
     print ('finished')
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-

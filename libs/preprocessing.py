@@ -54,7 +54,7 @@ class DocumentTM():
         #abs_path = Path('/home/dudgns1675/Textmining/textminer/database').absolute()
         #abs_path = Path('./database/').absolute()
         #abs_path = Path("")
-        abs_path = Path(__file__).parent.parent / 'database'
+        abs_path = Path(__file__).parent.parent / 'database/template'
         
         if 'chemname' in database and 'chemhash' in database:
             self._chemname = database.get('chemname')
@@ -245,16 +245,17 @@ class DocumentTM():
                 table.decompose()
 
             temppath = 'tempfile.html'
-            #with NamedTemporaryFile('w+', delete = False, encoding='UTF-8') as tempfile:
             with open(temppath, 'w', encoding='UTF-8') as tempfile:
                 tempfile.write(str(bs))
-                #temppath = tempfile.name
+
 
             with open(temppath, 'rb') as tempfile2:
                 doc = Document.from_file(tempfile2)
 
             os.unlink(temppath)
             assert not os.path.exists(temppath)
+        else:
+            raise TypeError(parser)
         
         #self.doc = doc
         self.Title = list(filter(lambda t : isinstance(t, Title), doc.elements))
